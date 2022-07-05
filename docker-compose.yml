@@ -1,0 +1,40 @@
+version: "3"
+services:
+    postgres:
+        image: postgres
+        restart: unless-stopped
+        volumes:
+            - ./pgdata:/var/lib/postgresql/data
+            - ./:/var/www
+        environment:
+            POSTGRES_DB: laravel
+            POSTGRES_USER: laravel-user
+            POSTGRES_PASSWORD: secret
+        ports:
+            - "5432:5432"
+        networks:
+            - app-network
+    php-fpm:
+        build: 
+            context: ./php-fpm
+        volumes:
+            - ./:/var/www
+        networks:
+            - app-network
+        restart: unless-stopped
+    nginx:
+        image: nginx:alpine
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www
+            - ./nginx/conf.d/:/etc/nginx/conf.d/
+        ports:
+            - "80:80"
+            - "443:443"
+        networks:
+            - app-network
+        depends_on:
+            - php-fpm
+networks:
+    app-network:
+        driver: bridge
